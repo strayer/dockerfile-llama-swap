@@ -1,0 +1,35 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG LLAMA_VERSION=(?<currentValue>b\\d+)"],
+      "depNameTemplate": "ggerganov/llama.cpp",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG LS_VERSION=(?<currentValue>v\\d+)"],
+      "depNameTemplate": "mostlygeek/llama-swap",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG SPEACHES_VERSION=(?<currentValue>v[\\d.\\-a-z]+)"],
+      "depNameTemplate": "speaches-ai/speaches",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ARG PARAKEET_COMMIT=(?<currentDigest>[a-f0-9]+)\\b"],
+      "depNameTemplate": "https://github.com/groxaxo/parakeet-tdt-0.6b-v3-fastapi-openai",
+      "datasourceTemplate": "git-refs",
+      "currentValueTemplate": "HEAD"
+    }
+  ]
+}

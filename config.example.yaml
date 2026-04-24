@@ -1,0 +1,43 @@
+# llama-swap example configuration
+#
+# Copy this file and adjust paths / model files to match your setup.
+# Mount your models directory to /models inside the container.
+#
+# Usage:
+#   docker run --gpus all -p 8080:8080 \
+#     -v /path/to/models:/models \
+#     -v /path/to/config.yaml:/etc/llama-swap/config/config.yaml \
+#     <image>
+
+models:
+  # ── LLM inference via llama.cpp ──────────────────────────────────────────────
+  #
+  # Replace /models/your-model.gguf with the actual path inside the container.
+  # Adjust --ctx-size and --n-gpu-layers to fit your GPU memory.
+  llama:
+    cmd: llama-server --port ${PORT} --model /models/your-model.gguf --ctx-size 4096 --n-gpu-layers 99
+
+  # ── Speech transcription via Speaches (faster-whisper backend) ───────────────
+  #
+  # Speaches downloads models from Hugging Face on first use.
+  # Set WHISPER__INFERENCE_DEVICE=cuda for GPU acceleration.
+  # See https://github.com/speaches-ai/speaches for full env var reference.
+  speaches:
+    cmd: >-
+      /opt/speaches/.venv/bin/uvicorn
+      --factory
+      --host 0.0.0.0
+      --port ${PORT}
+      speaches.main:create_app
+    env:
+      WHISPER__INFERENCE_DEVICE: cuda
+
+  # ── Speech transcription via Parakeet (ONNX) ─────────────────────────────────
+  #
+  # Parakeet listens on the fixed port 5092 (hardcoded in app.py).
+  # The explicit `proxy` URL is required because ${PORT} injection is not used.
+  parakeet:
+    cmd: /opt/venv/parakeet/bin/python /opt/parakeet/app.py
+    proxy: http://127.0.0.1:5092
+    env:
+      HF_HOME: /models/.cache/huggingface
