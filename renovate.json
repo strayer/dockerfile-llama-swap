@@ -19,8 +19,8 @@
     {
       "customType": "regex",
       "fileMatch": ["^Dockerfile$"],
-      "matchStrings": ["ARG SPEACHES_VERSION=(?<currentValue>v[\\d.\\-a-z]+)"],
-      "depNameTemplate": "speaches-ai/speaches",
+      "matchStrings": ["ARG WHISPERLIVE_VERSION=(?<currentValue>v[\\d.]+)"],
+      "depNameTemplate": "collabora/WhisperLive",
       "datasourceTemplate": "github-releases"
     },
     {

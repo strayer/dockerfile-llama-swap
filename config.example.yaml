@@ -17,20 +17,20 @@ models:
   llama:
     cmd: llama-server --port ${PORT} --model /models/your-model.gguf --ctx-size 4096 --n-gpu-layers 99
 
-  # ── Speech transcription via Speaches (faster-whisper backend) ───────────────
+  # ── Speech transcription via WhisperLive (faster-whisper backend) ────────────
   #
-  # Speaches downloads models from Hugging Face on first use.
-  # Set WHISPER__INFERENCE_DEVICE=cuda for GPU acceleration.
-  # See https://github.com/speaches-ai/speaches for full env var reference.
-  speaches:
+  # Pre-download the model before starting the container, e.g.:
+  #   huggingface-cli download Systran/faster-whisper-large-v3 \
+  #     --local-dir /models/faster-whisper-large-v3
+  # Set --device to cpu if no GPU is available.
+  whisper:
     cmd: >-
-      /opt/speaches/.venv/bin/uvicorn
-      --factory
-      --host 0.0.0.0
-      --port ${PORT}
-      speaches.main:create_app
-    env:
-      WHISPER__INFERENCE_DEVICE: cuda
+      /opt/WhisperLive/.venv/bin/python
+      /opt/WhisperLive/run_server.py
+      --backend faster_whisper
+      --faster_whisper_custom_model_path /models/faster-whisper-large-v3
+      --enable_rest
+      --rest_port ${PORT}
 
   # ── Speech transcription via Parakeet (ONNX) ─────────────────────────────────
   #

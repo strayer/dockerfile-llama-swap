@@ -1,6 +1,6 @@
 # llama-swap — amd64 / CUDA-only
 #
-# Bundles llama.cpp, Speaches (faster-whisper), and Parakeet (ONNX ASR),
+# Bundles llama.cpp, WhisperLive (faster-whisper), and Parakeet (ONNX ASR),
 # all orchestrated by llama-swap.
 #
 # Build:
@@ -16,7 +16,7 @@
 
 ARG LLAMA_VERSION=b8793
 ARG LS_VERSION=v201
-ARG SPEACHES_VERSION=v0.9.0-rc.3
+ARG WHISPERLIVE_VERSION=v0.8.0
 ARG PARAKEET_COMMIT=d53e5bb
 ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
@@ -86,11 +86,11 @@ RUN LS_NUM="${LS_VERSION#v}" \
   && chmod +x /install/bin/llama-swap \
   && echo "${LS_VERSION}" > /install/llama-swap-version
 
-# ── Build Speaches venv ────────────────────────────────────────────────────────
+# ── Build WhisperLive venv ─────────────────────────────────────────────────────
 
-FROM ubuntu:24.04 AS speaches-build
+FROM ubuntu:24.04 AS whisperlive-build
 
-ARG SPEACHES_VERSION
+ARG WHISPERLIVE_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV UV_COMPILE_BYTECODE=1
@@ -106,13 +106,15 @@ COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /usr/local/bin/uv
 
 RUN uv python install 3.12
 
-RUN git clone --depth 1 --branch "${SPEACHES_VERSION}" \
-  https://github.com/speaches-ai/speaches.git /opt/speaches
+RUN git clone --depth 1 --branch "${WHISPERLIVE_VERSION}" \
+  https://github.com/collabora/WhisperLive /opt/WhisperLive
 
-WORKDIR /opt/speaches
-
-RUN --mount=type=cache,id=speaches-uv,target=/root/.cache/uv \
-  uv sync --frozen --no-dev
+RUN --mount=type=cache,id=whisperlive-uv,target=/root/.cache/uv \
+  uv venv --python 3.12 /opt/WhisperLive/.venv \
+  && uv pip install --python /opt/WhisperLive/.venv \
+    -r /opt/WhisperLive/requirements/server.txt \
+  && uv pip install --python /opt/WhisperLive/.venv \
+    --no-deps /opt/WhisperLive
 
 # ── Build Parakeet venv ────────────────────────────────────────────────────────
 
@@ -149,7 +151,7 @@ FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS runtime
 
 ARG LLAMA_VERSION=unknown
 ARG LS_VERSION=unknown
-ARG SPEACHES_VERSION=unknown
+ARG WHISPERLIVE_VERSION=unknown
 ARG PARAKEET_COMMIT=unknown
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -177,11 +179,11 @@ COPY --from=llama-swap-download /install/bin/llama-swap /usr/local/bin/
 COPY --from=llama-swap-download /install/llama-swap-version /tmp/
 
 # uv-managed Python interpreters (venv symlinks resolve against these)
-COPY --from=speaches-build /opt/uv-python /opt/uv-python
+COPY --from=whisperlive-build /opt/uv-python /opt/uv-python
 COPY --from=parakeet-build /opt/uv-python /opt/uv-python
 
-# Speaches (source tree includes .venv created by uv sync)
-COPY --from=speaches-build /opt/speaches /opt/speaches
+# WhisperLive (source tree includes .venv)
+COPY --from=whisperlive-build /opt/WhisperLive /opt/WhisperLive
 
 # Parakeet source and venv
 COPY --from=parakeet-build /opt/parakeet /opt/parakeet
@@ -197,7 +199,7 @@ COPY config.example.yaml /etc/llama-swap/config/config.yaml
 
 RUN echo "llama.cpp: ${LLAMA_VERSION}" > /versions.txt \
   && echo "llama-swap: $(cat /tmp/llama-swap-version)" >> /versions.txt \
-  && echo "speaches: ${SPEACHES_VERSION}" >> /versions.txt \
+  && echo "whisperlive: ${WHISPERLIVE_VERSION}" >> /versions.txt \
   && echo "parakeet: ${PARAKEET_COMMIT}" >> /versions.txt \
   && echo "build_timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /versions.txt
 
