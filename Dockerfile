@@ -17,7 +17,6 @@
 ARG LLAMA_VERSION=b8793
 ARG LS_VERSION=v201
 ARG WHISPERLIVE_VERSION=v0.8.0
-ARG PARAKEET_COMMIT=d53e5bb
 ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
 # ── Builder base ───────────────────────────────────────────────────────────────
@@ -112,47 +111,17 @@ RUN git clone --depth 1 --branch "${WHISPERLIVE_VERSION}" \
 RUN --mount=type=cache,id=whisperlive-uv,target=/root/.cache/uv \
   uv venv --python 3.12 /opt/WhisperLive/.venv \
   && uv pip install --python /opt/WhisperLive/.venv \
-    -r /opt/WhisperLive/requirements/server.txt \
+  -r /opt/WhisperLive/requirements/server.txt \
   && uv pip install --python /opt/WhisperLive/.venv \
-    --no-deps /opt/WhisperLive
-
-# ── Build Parakeet venv ────────────────────────────────────────────────────────
-
-FROM ubuntu:24.04 AS parakeet-build
-
-ARG PARAKEET_COMMIT
-
-ENV DEBIAN_FRONTEND=noninteractive
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
-ENV UV_PYTHON_INSTALL_DIR=/opt/uv-python
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-  git ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
-
-COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /usr/local/bin/uv
-
-RUN uv python install 3.10
-
-RUN git clone https://github.com/groxaxo/parakeet-tdt-0.6b-v3-fastapi-openai /opt/parakeet \
-  && cd /opt/parakeet \
-  && git checkout "${PARAKEET_COMMIT}"
-
-COPY requirements/parakeet.txt /tmp/parakeet-requirements.txt
-
-RUN --mount=type=cache,id=parakeet-uv,target=/root/.cache/uv \
-  uv venv --python 3.10 /opt/venv/parakeet \
-  && uv pip install --python /opt/venv/parakeet -r /tmp/parakeet-requirements.txt
+  --no-deps /opt/WhisperLive
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
 
 FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS runtime
 
-ARG LLAMA_VERSION=unknown
-ARG LS_VERSION=unknown
-ARG WHISPERLIVE_VERSION=unknown
-ARG PARAKEET_COMMIT=unknown
+ARG LLAMA_VERSION
+ARG LS_VERSION
+ARG WHISPERLIVE_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
@@ -180,17 +149,9 @@ COPY --from=llama-swap-download /install/llama-swap-version /tmp/
 
 # uv-managed Python interpreters (venv symlinks resolve against these)
 COPY --from=whisperlive-build /opt/uv-python /opt/uv-python
-COPY --from=parakeet-build /opt/uv-python /opt/uv-python
 
 # WhisperLive (source tree includes .venv)
 COPY --from=whisperlive-build /opt/WhisperLive /opt/WhisperLive
-
-# Parakeet source and venv
-COPY --from=parakeet-build /opt/parakeet /opt/parakeet
-COPY --from=parakeet-build /opt/venv/parakeet /opt/venv/parakeet
-
-# uv (available at runtime for optional package management)
-COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /usr/local/bin/uv
 
 RUN ldconfig \
   && mkdir -p /etc/llama-swap/config /models
@@ -200,7 +161,6 @@ COPY config.example.yaml /etc/llama-swap/config/config.yaml
 RUN echo "llama.cpp: ${LLAMA_VERSION}" > /versions.txt \
   && echo "llama-swap: $(cat /tmp/llama-swap-version)" >> /versions.txt \
   && echo "whisperlive: ${WHISPERLIVE_VERSION}" >> /versions.txt \
-  && echo "parakeet: ${PARAKEET_COMMIT}" >> /versions.txt \
   && echo "build_timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /versions.txt
 
 WORKDIR /models

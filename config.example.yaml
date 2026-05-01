@@ -15,7 +15,8 @@ models:
   # Replace /models/your-model.gguf with the actual path inside the container.
   # Adjust --ctx-size and --n-gpu-layers to fit your GPU memory.
   llama:
-    cmd: llama-server --port ${PORT} --model /models/your-model.gguf --ctx-size 4096 --n-gpu-layers 99
+    cmd: llama-server --port ${PORT} --model /models/your-model.gguf --ctx-size 4096
+      --n-gpu-layers 99
 
   # ── Speech transcription via WhisperLive (faster-whisper backend) ────────────
   #
@@ -25,19 +26,7 @@ models:
   # Set --device to cpu if no GPU is available.
   whisper:
     cmd: >-
-      /opt/WhisperLive/.venv/bin/python
-      /opt/WhisperLive/run_server.py
-      --backend faster_whisper
-      --faster_whisper_custom_model_path /models/faster-whisper-large-v3
-      --enable_rest
-      --rest_port ${PORT}
-
-  # ── Speech transcription via Parakeet (ONNX) ─────────────────────────────────
-  #
-  # Parakeet listens on the fixed port 5092 (hardcoded in app.py).
-  # The explicit `proxy` URL is required because ${PORT} injection is not used.
-  parakeet:
-    cmd: /opt/venv/parakeet/bin/python /opt/parakeet/app.py
-    proxy: http://127.0.0.1:5092
-    env:
-      HF_HOME: /models/.cache/huggingface
+      /opt/WhisperLive/.venv/bin/python /opt/WhisperLive/run_server.py --backend
+      faster_whisper --faster_whisper_custom_model_path
+      /models/faster-whisper-large-v3 --enable_rest --rest_port ${PORT}
+    checkEndpoint: /openapi.json

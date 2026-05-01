@@ -22,14 +22,6 @@
       "matchStrings": ["ARG WHISPERLIVE_VERSION=(?<currentValue>v[\\d.]+)"],
       "depNameTemplate": "collabora/WhisperLive",
       "datasourceTemplate": "github-releases"
-    },
-    {
-      "customType": "regex",
-      "fileMatch": ["^Dockerfile$"],
-      "matchStrings": ["ARG PARAKEET_COMMIT=(?<currentDigest>[a-f0-9]+)\\b"],
-      "depNameTemplate": "https://github.com/groxaxo/parakeet-tdt-0.6b-v3-fastapi-openai",
-      "datasourceTemplate": "git-refs",
-      "currentValueTemplate": "HEAD"
     }
   ]
 }
