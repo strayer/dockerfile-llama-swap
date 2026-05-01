@@ -14,14 +14,14 @@
 # The COPY --from=ghcr.io/astral-sh/uv:* lines below are tracked by
 # Renovate's built-in dockerfile manager.
 
-ARG LLAMA_VERSION=b8793
-ARG LS_VERSION=v201
+ARG LLAMA_VERSION=b8996
+ARG LS_VERSION=v210
 ARG WHISPERLIVE_VERSION=v0.8.0
 ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
 # ── Builder base ───────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder-base
+FROM nvidia/cuda:13.2.1-devel-ubuntu24.04 AS builder-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CCACHE_DIR=/ccache
@@ -101,7 +101,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   git ca-certificates \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=ghcr.io/astral-sh/uv:0.8.14 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.11.8 /uv /usr/local/bin/uv
 
 RUN uv python install 3.12
 
@@ -117,7 +117,7 @@ RUN --mount=type=cache,id=whisperlive-uv,target=/root/.cache/uv \
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS runtime
+FROM nvidia/cuda:13.2.1-cudnn-runtime-ubuntu24.04 AS runtime
 
 ARG LLAMA_VERSION
 ARG LS_VERSION
