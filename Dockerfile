@@ -68,7 +68,7 @@ RUN --mount=type=cache,id=ccache,target=/ccache \
 
 # ── Download llama-swap ────────────────────────────────────────────────────────
 
-FROM ubuntu:24.04 AS llama-swap-download
+FROM ubuntu:26.04 AS llama-swap-download
 
 ARG LS_VERSION
 
@@ -87,7 +87,7 @@ RUN LS_NUM="${LS_VERSION#v}" \
 
 # ── Build WhisperLive venv ─────────────────────────────────────────────────────
 
-FROM ubuntu:24.04 AS whisperlive-build
+FROM ubuntu:26.04 AS whisperlive-build
 
 ARG WHISPERLIVE_VERSION
 
