@@ -14,7 +14,7 @@
 # The COPY --from=ghcr.io/astral-sh/uv:* lines below are tracked by
 # Renovate's built-in dockerfile manager.
 
-ARG LLAMA_VERSION=b8996
+ARG LLAMA_VERSION=b9245
 ARG LS_VERSION=v210
 ARG WHISPERLIVE_VERSION=v0.8.0
 ARG CMAKE_CUDA_ARCHITECTURES="75;86;89;90;100"
