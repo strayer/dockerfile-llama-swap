@@ -17,11 +17,11 @@
 ARG LLAMA_VERSION=b9245
 ARG LS_VERSION=v210
 ARG WHISPERLIVE_VERSION=v0.8.0
-ARG CMAKE_CUDA_ARCHITECTURES="75;86;89;90;100"
+ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
 # ── Builder base ───────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:13.2.1-devel-ubuntu24.04 AS builder-base
+FROM nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CCACHE_DIR=/ccache
@@ -117,7 +117,7 @@ RUN --mount=type=cache,id=whisperlive-uv,target=/root/.cache/uv \
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:13.2.1-cudnn-runtime-ubuntu24.04 AS runtime
+FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS runtime
 
 ARG LLAMA_VERSION
 ARG LS_VERSION
