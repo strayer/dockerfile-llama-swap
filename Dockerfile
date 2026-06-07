@@ -16,7 +16,7 @@
 
 ARG LLAMA_VERSION=b9245
 ARG LS_VERSION=v223
-ARG WHISPERLIVE_VERSION=v0.8.0
+ARG WHISPERLIVE_VERSION=v0.9.0
 ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
 # ── Builder base ───────────────────────────────────────────────────────────────
