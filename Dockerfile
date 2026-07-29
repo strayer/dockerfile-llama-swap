@@ -21,7 +21,7 @@ ARG CMAKE_CUDA_ARCHITECTURES="60;61;75;86;89"
 
 # ── Builder base ───────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:12.9.1-devel-ubuntu24.04 AS builder-base
+FROM nvidia/cuda:13.3.1-devel-ubuntu24.04 AS builder-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV CCACHE_DIR=/ccache
@@ -117,7 +117,7 @@ RUN --mount=type=cache,id=whisperlive-uv,target=/root/.cache/uv \
 
 # ── Runtime ────────────────────────────────────────────────────────────────────
 
-FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04 AS runtime
+FROM nvidia/cuda:13.3.1-cudnn-runtime-ubuntu24.04 AS runtime
 
 ARG LLAMA_VERSION
 ARG LS_VERSION
